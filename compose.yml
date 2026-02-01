@@ -1,0 +1,42 @@
+services:
+  ultralytics-training:
+    image: runpod-ultralytics-template:latest
+    container_name: ultralytics-yolo-training
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+    privileged: true
+    
+    environment:
+      - ULTRALYTICS_VERSION=8.3.57
+      - FILEBROWSER_PORT=8080
+      - JUPYTER_PORT=8888
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    
+    ports:
+      - "8888:8888"
+      - "8080:8080"
+      - "6006:6006"
+    
+    volumes:
+      - ./workspace:/workspace
+      - ./datasets:/datasets
+      - ./runs:/runs
+      - ./models:/models
+    
+    shm_size: '16gb'
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
